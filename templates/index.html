@@ -1,0 +1,1466 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Caderno - Logística (API)</title>
+    <style>
+        /* Estilos CSS (Tema Black & Yellow) */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #121212;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            background-color: #222;
+            border: 1px solid #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+            padding: 25px;
+            border-radius: 8px;
+        }
+
+        /* TELA DE LOGIN */
+        #login-screen {
+            max-width: 400px;
+            margin: auto;
+            padding: 40px;
+            background-color: #2a2a2a;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.5);
+        }
+
+        #login-screen h2 {
+            color: #ffc107;
+            margin-bottom: 30px;
+        }
+
+        #login-screen input[type="text"],
+        #login-screen input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #333;
+            color: #f0f0f0;
+            font-size: 16px;
+        }
+
+        #login-screen button {
+            width: 100%;
+            padding: 12px;
+            background-color: #ffc107;
+            color: #212529;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+
+        #login-screen button:hover {
+            background-color: #e0a800;
+        }
+
+        .error-message {
+            color: #dc3545;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+        .main-title {
+            color: #ffc107;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            font-weight: bold;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .nav-buttons-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #ffc107;
+            padding-bottom: 15px;
+            margin-bottom: 25px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .nav-buttons button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border: 2px solid #ffc107;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        .nav-buttons button:hover {
+            background-color: #ffc107;
+            color: #212529;
+        }
+
+        #btn-cadastro { background-color: #28a745; border-color: #28a745; color: white; }
+        #btn-cadastro:hover { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+
+        #btn-confirmacao { background-color: #007bff; border-color: #007bff; color: white; }
+        #btn-confirmacao:hover { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+
+        #btn-relatorio { background-color: #ffc107; color: #212529; font-weight: bold; border-color: #ffc107; }
+        #btn-relatorio:hover { background-color: #e0a800; }
+
+        #btn-referencia { background-color: #17a2b8; border-color: #17a2b8; color: white; }
+        #btn-referencia:hover { background-color: #ffc107; color: #212529; border-color: #ffc107; }
+
+        #btn-logout {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            color: white;
+            padding: 8px 15px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        #btn-logout:hover {
+            background-color: #c82333;
+            border-color: #c82333;
+        }
+
+
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #ffc107;
+        }
+        .form-group input, .form-group textarea, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #333;
+            color: #f0f0f0;
+        }
+
+        #bulk_reference_data {
+            min-height: 150px;
+            font-family: monospace;
+            white-space: pre;
+        }
+
+        ::placeholder {
+            color: #999;
+        }
+
+        #cadastro-form h3 { color: #28a745; margin-top: 0; margin-bottom: 25px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        #confirmacao-form h3 { color: #007bff; margin-top: 0; margin-bottom: 25px; border-bottom: 1px dashed #444; padding-bottom: 10px; }
+        #relatorio-form h3 { color: #ffc107; margin-top: 0; margin-bottom: 25px; border-bottom: 1px dashed #ffc107; padding-bottom: 10px; }
+        #referencia-form h3 { color: #17a2b8; margin-top: 0; margin-bottom: 25px; border-bottom: 1px dashed #17a2b8; padding-bottom: 10px; }
+
+        .relatorio-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 0.85em;
+            table-layout: fixed;
+        }
+
+        .relatorio-table th, .relatorio-table td {
+            border: 1px solid #444;
+            padding: 10px;
+            text-align: left;
+            vertical-align: top;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            word-wrap: break-word;
+        }
+
+        .relatorio-table th {
+            background-color: #333;
+            color: #ffc107;
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            position: relative;
+        }
+
+        .relatorio-table tr:nth-child(even) { background-color: #2a2a2a; }
+        .relatorio-table tr:hover { background-color: #444; }
+
+        /* ESTILOS PARA REDIMENSIONAMENTO MANUAL (RESIZER) */
+        .resizer {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 8px;
+            height: 100%;
+            cursor: col-resize;
+            user-select: none;
+            background-color: transparent;
+            z-index: 1;
+        }
+
+        .resizer:hover {
+            background-color: rgba(255, 193, 7, 0.2);
+        }
+
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-action-button {
+            padding: 12px 25px;
+            background-color: #17a2b8;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+
+        .form-action-button:hover { background-color: #007bff; }
+        .form-action-button[onclick^="clearData"] { background-color: #dc3545; }
+        .form-action-button[onclick^="clearData"]:hover { background-color: #c82333; }
+
+
+        .hidden { display: none; }
+
+        #confirmacao-form input[readonly], #confirmacao-form textarea[readonly] {
+            background-color: #444 !important;
+            border-color: #555;
+            color: #ddd;
+        }
+
+        .relatorio-table a {
+            color: #ffc107;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+        .relatorio-table a:hover {
+            color: #e0a800;
+        }
+
+        #cadastro-referencia {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px dashed #555;
+            border-radius: 4px;
+            background-color: #2a2a2a;
+        }
+        #cadastro-referencia h4 {
+            color: #17a2b8;
+            margin-top: 0;
+            border-bottom: 1px solid #17a2b8;
+            padding-bottom: 5px;
+        }
+
+        .warning-text {
+            color: #dc3545;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .anexo-preview {
+            margin-top: 10px;
+            padding: 10px;
+            border: 1px dashed #17a2b8;
+            border-radius: 4px;
+        }
+
+        #confirmacao-form .form-group > div {
+            align-items: flex-end;
+        }
+
+        #confirmacao-form .form-group input {
+            flex-grow: 1;
+        }
+
+        /* Estilo para registros pendentes */
+        .pendente-row {
+            background-color: #402020 !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="login-screen">
+    <h2>🔒 Login de Acesso</h2>
+    <form id="login-form">
+        <input type="text" id="username" placeholder="Usuário" required onkeydown="handleLoginKeydown(event)">
+        <input type="password" id="password" placeholder="Senha" required onkeydown="handleLoginKeydown(event)">
+        <button type="submit">Entrar</button>
+        <p id="login-error" class="error-message hidden">Usuário ou senha incorretos.</p>
+    </form>
+</div>
+<div class="container hidden" id="main-application">
+    <h1 class="main-title">Caderno de PTM</h1>
+    <div class="nav-buttons-wrapper">
+        <div class="nav-buttons">
+            <button id="btn-cadastro" onclick="showForm('cadastro')">📤 Cadastro de Saída</button>
+            <button id="btn-confirmacao" onclick="showForm('confirmacao')">✅ Confirmação de Entrega</button>
+            <button id="btn-relatorio" onclick="showForm('relatorio')">📑 Caderno de Entregas</button>
+            <button id="btn-referencia" onclick="showForm('referencia')">📚 Referências NM/Desc</button>
+        </div>
+        <button id="btn-logout" onclick="logout()">Sair</button>
+    </div>
+
+    <form id="cadastro-form" class="hidden">
+        <h3>Cadastro de Material (Saída)</h3>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nm_saida">NM (Número do Material)</label>
+                <input
+                    type="text"
+                    id="nm_saida"
+                    name="nm_saida"
+                    required
+                    maxlength="10"
+                    oninput="formatNM(this); autofillDescription();">
+            </div>
+            <div class="form-group">
+                <label for="quantidade_saida">Quantidade</label>
+                <input type="number" id="quantidade_saida" name="quantidade_saida" min="1" required>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="descricao_saida">Descrição</label>
+            <textarea id="descricao_saida" name="descricao_saida" rows="2" required></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="destino_saida">Destino</label>
+                <input
+                    type="text"
+                    id="destino_saida"
+                    name="destino_saida"
+                    list="listaDestinos"
+                    required>
+                </div>
+            <div class="form-group">
+                <label for="responsavel_entrega">Responsável pela Entrega</label>
+                <input
+                    type="text"
+                    id="responsavel_entrega"
+                    name="responsavel_entrega"
+                    list="listaResponsaveis"
+                    required>
+                </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="data_doc_saida">Data Doc.</label>
+                <input type="date" id="data_doc_saida" name="data_doc_saida" required>
+            </div>
+            <div class="form-group">
+                <label for="deposito_saida">Depósito</label>
+                <select id="deposito_saida" name="deposito_saida" required>
+                    <option value="" disabled selected>Selecione um Depósito</option>
+                    <option value="AL-03">AL-03</option>
+                    <option value="AL-04">AL-04</option>
+                    <option value="AL-05">AL-05</option>
+                    <option value="AL-06">AL-06</option>
+                    <option value="AL-10">AL-10</option>
+                    <option value="AL-13">AL-13</option>
+                    <option value="AL-14">AL-14</option>
+                    <option value="AL-18">AL-18</option>
+                    <option value="AL-19">AL-19</option>
+                    <option value="AL-24">AL-24</option>
+                    <option value="AL-25">AL-25</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="num_doc_saida">Nº Doc.</label>
+                <input
+                    type="number"
+                    id="num_doc_saida"
+                    name="num_doc_saida"
+                    maxlength="10"
+                    oninput="if(this.value.length > this.maxLength) this.value = this.value.slice(0, this.maxLength);"
+                    required>
+            </div>
+
+            <div class="form-group">
+                <label for="item_saida">Item</label>
+                <input type="text" id="item_saida" name="item_saida" required>
+            </div>
+        </div>
+
+        <button type="submit" class="form-action-button">Cadastrar Saída</button>
+    </form>
+
+    <datalist id="listaDestinos">
+        </datalist>
+
+    <datalist id="listaResponsaveis">
+        </datalist>
+
+    <form id="confirmacao-form" class="hidden">
+        <h3>Confirmação de Entrega (Coleta)</h3>
+
+        <div class="form-row" style="align-items: flex-end;">
+            <div class="form-group">
+                <label for="num_doc_pesquisa">Pesquisar por N° Doc.</label>
+                <input type="text" id="num_doc_pesquisa" placeholder="Ex: 4000000123" required style="height: 40px;">
+            </div>
+            <div class="form-group">
+                <label for="item_pesquisa">Item</label>
+                <div style="display: flex; gap: 10px; align-items: flex-end;">
+                    <input type="text" id="item_pesquisa" placeholder="Ex: 00010" required style="flex-grow: 1;">
+                    <button type="button" class="form-action-button"
+                        style="margin: 0; padding: 10px 20px; height: 40px; background-color: #007bff;"
+                        onclick="handleSearch()">
+                        🔎
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <hr style="border-top: 1px solid #444;">
+
+        <p style="font-style: italic; color: #999;">Informações carregadas após a pesquisa:</p>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nm_confirmacao">NM (Carregado)</label>
+                <input type="text" id="nm_confirmacao" readonly>
+            </div>
+            <div class="form-group">
+                <label for="data_doc_confirmacao">Data Doc. (Carregado)</label>
+                <input type="date" id="data_doc_confirmacao" readonly>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="descricao_confirmacao">Descrição (Carregado)</label>
+            <textarea id="descricao_confirmacao" rows="2" readonly></textarea>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="deposito_confirmacao">Depósito (Carregado)</label>
+                <input type="text" id="deposito_confirmacao" readonly>
+            </div>
+            <div class="form-group">
+                <label for="num_doc_confirmacao">Nº Doc. (Carregado)</label>
+                <input type="text" id="num_doc_confirmacao" readonly>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="item_confirmacao">Item (Carregado)</label>
+                <input type="text" id="item_confirmacao" readonly>
+            </div>
+             <div class="form-group">
+                </div>
+        </div>
+
+        <input type="hidden" id="registro_id" value="0">
+
+        <hr style="border-top: 1px solid #444;">
+
+        <p style="font-style: italic; color: #999;">Campos de Confirmação/Coleta:</p>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="data_coleta">Data da Coleta</label>
+                <input type="date" id="data_coleta" name="data_coleta">
+            </div>
+            <div class="form-group">
+                <label for="nome_motorista">Nome/Empresa do Motorista</label>
+                <input type="text" id="nome_motorista" name="nome_motorista">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="nota_fiscal">Nota Fiscal (NF)</label>
+                <input type="text" id="nota_fiscal" name="nota_fiscal">
+            </div>
+
+            <div class="form-group">
+                <label for="anexo_imagem">Anexar Imagens (Comprovante)</label>
+                <input
+                    type="file"
+                    id="anexo_imagem"
+                    name="anexo_imagem"
+                    accept="image/*, application/pdf"
+                    multiple>
+                <p class="warning-text">⚠️ O arquivo será enviado para a pasta 'uploads/' no servidor. Não há limite de tamanho imposto pelo sistema.</p>
+                <div id="anexo-preview" class="anexo-preview hidden"></div>
+            </div>
+        </div>
+
+        <button type="submit" class="form-action-button" style="background-color: #ffc107; color: #212529;">Confirmar Entrega/Coleta</button>
+    </form>
+
+    <section id="relatorio-form" class="hidden">
+        <h3>📑 Caderno de Entregas</h3>
+
+        <div>
+            <table class="relatorio-table">
+                <thead>
+                    <tr>
+                        <th>NM</th>
+                        <th>Descrição</th>
+                        <th>Nº Doc.</th>
+                        <th>Qtd</th> <th>Item</th>
+                        <th>Destino</th>
+                        <th>Resp. Entrega</th>
+                        <th>Data Doc. (Saída)</th>
+                        <th>Depósito</th>
+                        <th>Data Coleta</th>
+                        <th>Nome/Empresa do Motorista</th>
+                        <th>NF</th>
+                        <th>Anexo</th> </tr>
+                </thead>
+                <tbody id="relatorio-body">
+                    </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section id="referencia-form" class="hidden">
+        <h3>📚 Gerenciamento de Referências NM/Descrição</h3>
+
+        <div id="cadastro-referencia">
+            <h4>Colar Múltiplos NM e Descrições</h4>
+            <p style="color: #ccc; font-size: 0.9em;">
+                **Formato de colagem:** Cole o **NM** seguido da **descrição** em cada linha. Você pode usar **espaço**, **tabulação** ou **ponto-e-vírgula (`;`)** como separador. **O NM deve ter até 8 dígitos (ex: 10000000).**
+            </p>
+            <pre style="background-color: #333; padding: 10px; border-radius: 4px; color: #ffc107;">10000000 Rolamento de Esferas Aço Inox
+99999999;Parafuso Sextavado M8x50</pre>
+
+            <div class="form-group">
+                <label for="bulk_reference_data">Área de Colagem (NM e Descrição - um por linha)</label>
+                <textarea id="bulk_reference_data" rows="8" placeholder="Cole seus dados aqui, no formato NM Descrição (ou NM;Descrição)"></textarea>
+            </div>
+            <button type="button" class="form-action-button" onclick="processBulkReference()" style="background-color: #ffc107; color: #212529;">⚙️ Processar Colagem</button>
+        </div>
+
+        <h4 style="color: #ffc107; margin-top: 30px;">Referências Atuais Salvas</h4>
+        <div style="overflow-x: auto; max-height: 400px;">
+            <table class="relatorio-table">
+                <thead>
+                    <tr>
+                        <th>NM</th>
+                        <th>Descrição Padrão</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="referencia-body">
+                    </tbody>
+            </table>
+        </div>
+        <button type="button" class="form-action-button" onclick="clearData()" style="background-color: #dc3545; margin-top: 20px;">Limpar todos os dados (Backend API e Arquivos)</button>
+    </section>
+</div>
+<script>
+    // --- VARIÁVEIS DE CONFIGURAÇÃO ---
+    const API_BASE_URL = 'http://127.0.0.1:5000/api';
+    const STORAGE_KEY_REF_VISIBLE = 'referencia_is_visible';
+    const MAX_NM_DIGITS = 8;
+
+    // VARIÁVEIS DE LOGIN
+    const VALID_USERNAME = 'soparm';
+    const VALID_PASSWORD = 'ptm25';
+    // ---------------------------------
+
+    let DESCRICAO_REFERENCIA = [];
+    let CADERNO_REGISTROS = [];
+    // ATTACHMENTS_TO_SAVE agora armazena objetos { name: nome_original, unique_filename: nome_unico_servidor }
+    let ATTACHMENTS_TO_SAVE = [];
+
+    // --- LISTA DE DESTINOS ---
+    const DESTINOS_LIST = [
+        "ALTO DO RODRIGUES", "ANCHIETA", "ARACAJU", "ARAUCARIA", "BETIM",
+        "CANOAS", "CARAGUATATUBA", "CAUCAIA", "COARI", "CUBATAO",
+        "DUQUE DE CAXIAS", "FORTALEZA", "GUAMARE", "IPOJUCA", "ITABORAI-RJ",
+        "JAPARATUBA", "LINHARES", "MACAE", "MANAUS", "MAUA",
+        "MOSSORO", "NATAL", "PARACURU", "PAULINIA", "RIO DE JANEIRO",
+        "SÃO JOSE DOS CAMPOS", "SÃO MATEUS", "SÃO MATEUS DO SUL-PR",
+        "SERRA", "TRES LAGOAS", "GUARULHOS", "PONTAL DE SANTA MARINA"
+    ].sort();
+
+    // --- LISTA DE RESPONSÁVEIS ---
+    const RESPONSAVEIS_LIST = [
+        "EDMILTON FERREIRA - 47542049", "EMERSON FRANCA - 42668002",
+        "CAIQUE VICTOR - 72040350", "OSVALDO VIEIRA - 72038680",
+        "ALAN SANTOS - 72060741", "MARCELO CARLETTI - 71373618",
+        "JOSIMAR REIS - 71737732", "LUIS CLAUDIO - 40348914",
+        "LUIZ CARLOS - 71953139", "MANUEL DUARTE - 40092990",
+        "LEOMAR - 45932136", "EMERSON BORGES - 47968245",
+        "ALISSON - 43798470", "HENRIQUE - 72585336",
+        "ADRIANO - 72570046", "LUCAS - 72667956",
+        "MARCOS - 72583908", "ROBERTO - 71489246",
+        "JOAN - 72658935"
+    ].sort();
+
+    // --- LÓGICA DE LOGIN ---
+
+    document.getElementById('login-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const usernameInput = document.getElementById('username').value.trim();
+        const passwordInput = document.getElementById('password').value.trim();
+        const errorMessage = document.getElementById('login-error');
+
+        if (usernameInput === VALID_USERNAME && passwordInput === VALID_PASSWORD) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('main-application').classList.remove('hidden');
+            document.body.style.alignItems = 'flex-start';
+            initializeApplication();
+        } else {
+            errorMessage.classList.remove('hidden');
+            setTimeout(() => {
+                errorMessage.classList.add('hidden');
+                document.getElementById('password').value = '';
+            }, 3000);
+        }
+    });
+
+    function handleLoginKeydown(event) {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            const currentId = event.target.id;
+
+            if (currentId === 'username' && event.key === 'ArrowDown') {
+                document.getElementById('password').focus();
+            } else if (currentId === 'password' && event.key === 'ArrowUp') {
+                document.getElementById('username').focus();
+            }
+        }
+    }
+
+    function logout() {
+        if (!document.getElementById('main-application').classList.contains('hidden')) {
+            document.getElementById('login-form').reset();
+            document.getElementById('login-error').classList.add('hidden');
+            document.getElementById('main-application').classList.add('hidden');
+            document.getElementById('login-screen').classList.remove('hidden');
+            document.body.style.alignItems = 'center';
+            document.getElementById('username').focus();
+            alert('Você saiu da aplicação.');
+        }
+    }
+
+    // --- FUNÇÃO DE INICIALIZAÇÃO APÓS O LOGIN ---
+    async function initializeApplication() {
+        await loadData();
+
+        const initialForm = loadReferenceState();
+        showForm(initialForm);
+
+        // Garante que o botão de referência fique oculto se a aba não for a inicial
+        if (initialForm !== 'referencia') {
+             document.getElementById('btn-referencia').classList.add('hidden');
+        }
+
+        makeResizableTable('relatorio-form');
+    }
+
+    // --- LÓGICA DE ARMAZENAMENTO/CARREGAMENTO (VIA API) ---
+
+    async function fetchData(endpoint) {
+        const response = await fetch(`${API_BASE_URL}/${endpoint}`);
+        if (!response.ok) {
+            throw new Error(`Erro ${response.status}: ${response.statusText}`);
+        }
+        return response.json();
+    }
+
+    async function loadData() {
+        try {
+            const storedRefs = await fetchData('referencias');
+            DESCRICAO_REFERENCIA = storedRefs;
+
+            const storedRegs = await fetchData('registros');
+            CADERNO_REGISTROS = storedRegs;
+
+            loadDatalistOptions();
+
+        } catch (error) {
+            console.error("Erro ao carregar dados do Backend:", error);
+            CADERNO_REGISTROS = [];
+            DESCRICAO_REFERENCIA = [];
+            alert("Não foi possível conectar ao Backend Python. Certifique-se de que o 'app.py' está rodando na porta 5000.");
+        }
+    }
+
+    // --- FUNÇÕES DE DATALIST (DESTINO E RESPONSÁVEL) ---
+    function loadDatalistOptions() {
+        const datalistDestinos = document.getElementById('listaDestinos');
+        datalistDestinos.innerHTML = '';
+        DESTINOS_LIST.forEach(destino => {
+            const option = document.createElement('option');
+            option.value = destino;
+            datalistDestinos.appendChild(option);
+        });
+
+        const datalistResponsaveis = document.getElementById('listaResponsaveis');
+        datalistResponsaveis.innerHTML = '';
+        RESPONSAVEIS_LIST.forEach(responsavel => {
+            const option = document.createElement('option');
+            option.value = responsavel;
+            datalistResponsaveis.appendChild(option);
+        });
+    }
+
+    // --- FUNÇÕES GERAIS DE INTERFACE ---
+
+    function saveReferenceState(isVisible) {
+        localStorage.setItem(STORAGE_KEY_REF_VISIBLE, isVisible ? 'true' : 'false');
+    }
+
+    function loadReferenceState() {
+        const isVisible = localStorage.getItem(STORAGE_KEY_REF_VISIBLE);
+        if (isVisible === 'true') {
+            return 'referencia';
+        }
+        return 'cadastro';
+    }
+
+    async function showForm(formType) {
+        const forms = {
+            cadastro: document.getElementById('cadastro-form'),
+            confirmacao: document.getElementById('confirmacao-form'),
+            relatorio: document.getElementById('relatorio-form'),
+            referencia: document.getElementById('referencia-form')
+        };
+
+        Object.values(forms).forEach(form => form.classList.add('hidden'));
+
+        const referenciaButton = document.getElementById('btn-referencia');
+
+        if (forms[formType]) {
+            forms[formType].classList.remove('hidden');
+
+            if (formType === 'referencia') {
+                referenciaButton.classList.remove('hidden');
+                saveReferenceState(true);
+                await loadData();
+                renderReferenceTable();
+            } else {
+                referenciaButton.classList.add('hidden');
+                saveReferenceState(false);
+
+                if (formType === 'relatorio') {
+                    await loadData();
+                    renderRelatorio(CADERNO_REGISTROS);
+                }
+            }
+        }
+    }
+
+    // --- FUNÇÃO DE MASCARAMENTO NM (8 DÍGITOS) ---
+    function formatNM(input) {
+        let value = input.value.replace(/\D/g, "");
+        if (value.length > MAX_NM_DIGITS) {
+            value = value.substring(0, MAX_NM_DIGITS);
+        }
+
+        let formatted = value;
+        if (value.length > 3) {
+            formatted = value.substring(0, value.length - 3) + '.' + value.substring(value.length - 3);
+        }
+        if (formatted.length > 7) {
+             formatted = formatted.substring(0, formatted.length - 7) + '.' + formatted.substring(formatted.length - 7);
+        }
+
+        input.value = formatted;
+    }
+
+    // --- CADASTRO DE SAÍDA (API) ---
+
+    document.getElementById('cadastro-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const form = e.target;
+
+        const nm_limpo = form.nm_saida.value.replace(/\D/g, "");
+        const num_doc = form.num_doc_saida.value;
+        const item = form.item_saida.value.trim();
+
+        const data = {
+            id: '0',
+            nm_saida: nm_limpo,
+            descricao_saida: form.descricao_saida.value,
+            quantidade_saida: form.quantidade_saida.value,
+            destino_saida: form.destino_saida.value,
+            responsavel_entrega: form.responsavel_entrega.value,
+            data_doc_saida: form.data_doc_saida.value,
+            deposito_saida: form.deposito_saida.value,
+            num_doc_saida: num_doc,
+            item_saida: item,
+        };
+
+        if (data.deposito_saida === '') {
+             alert('Por favor, selecione um Depósito válido.');
+             return;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/registros`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+
+            if (response.status === 409) {
+                 alert(`⚠️ ERRO: Registro Duplicado! \n\n ${result.error}`);
+                 return;
+            } else if (!response.ok) {
+                 throw new Error(result.error || 'Erro desconhecido no servidor.');
+            }
+
+            alert(`Material cadastrado com sucesso! ID do Backend: ${result.id}`);
+            form.reset();
+
+            await loadData();
+            showForm('relatorio');
+
+        } catch (error) {
+            alert(`Falha ao cadastrar registro: ${error.message}`);
+        }
+    });
+
+    // --- PESQUISA E CONFIRMAÇÃO ---
+
+    function handleSearch() {
+        const numDocQuery = document.getElementById('num_doc_pesquisa').value.trim();
+        const itemQuery = document.getElementById('item_pesquisa').value.trim();
+
+        const emptyFields = { nm: '', desc: '', dataDoc: '', dep: '', numDoc: '', item: '', id: '0' };
+
+        if (!numDocQuery || !itemQuery) {
+            alert('Por favor, digite o N° Doc. e o Item para pesquisar um registro único.');
+            fillConfirmationFields(emptyFields);
+            return;
+        }
+
+        // Limpa o buffer de anexos antes de carregar
+        ATTACHMENTS_TO_SAVE = [];
+        updateAttachmentPreview();
+
+        const item = CADERNO_REGISTROS.find(reg => {
+             const isDocMatch = reg.num_doc_saida === numDocQuery;
+             const isItemMatch = reg.item_saida === itemQuery;
+             return isDocMatch && isItemMatch;
+        });
+
+        if (item) {
+
+            const nmFormatado = formatNMDisplay(item.nm_saida);
+
+            fillConfirmationFields({
+                id: item.id,
+                nm: nmFormatado,
+                desc: item.descricao_saida,
+                dataDoc: item.data_doc_saida,
+                dep: item.deposito_saida,
+                numDoc: item.num_doc_saida,
+                item: item.item_saida
+            });
+
+            document.getElementById('data_coleta').value = item.data_coleta && item.data_coleta !== 'Pendente' ? item.data_coleta : '';
+            document.getElementById('nome_motorista').value = item.nome_motorista || '';
+            document.getElementById('nota_fiscal').value = item.nota_fiscal || '';
+
+            // Carrega os nomes dos arquivos do DB (que são strings) para o buffer
+            if (item.anexos && Array.isArray(item.anexos)) {
+                 // No DB só temos o nome único, precisamos recriar o objeto de anexo
+                 ATTACHMENTS_TO_SAVE = item.anexos.map(filename => ({
+                     name: filename, // Usamos o nome único como nome de exibição temporário, ou poderíamos buscar o original se tivéssemos salvo
+                     unique_filename: filename
+                 }));
+            }
+            updateAttachmentPreview();
+
+            alert(`Registro encontrado para N° Doc: ${numDocQuery} e Item: ${itemQuery}`);
+        } else {
+            alert(`Nenhum registro de saída encontrado para a combinação: N° Doc.: ${numDocQuery} / Item: ${itemQuery}`);
+            fillConfirmationFields(emptyFields);
+        }
+    }
+
+    function fillConfirmationFields(data) {
+        document.getElementById('registro_id').value = data.id;
+        document.getElementById('nm_confirmacao').value = data.nm;
+        document.getElementById('descricao_confirmacao').value = data.desc;
+        document.getElementById('data_doc_confirmacao').value = data.dataDoc;
+        document.getElementById('deposito_confirmacao').value = data.dep;
+        document.getElementById('num_doc_confirmacao').value = data.numDoc;
+        document.getElementById('item_confirmacao').value = data.item;
+    }
+
+    document.getElementById('confirmacao-form').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const recordId = document.getElementById('registro_id').value;
+        if (!recordId || recordId === '0') {
+            alert('Por favor, pesquise e carregue um registro válido antes de confirmar a entrega.');
+            return;
+        }
+
+        const form = e.target;
+
+        const dataColeta = form.data_coleta.value || 'Pendente';
+        const nomeMotorista = form.nome_motorista.value;
+        const notaFiscal = form.nota_fiscal.value;
+
+        // Mapeia o buffer para enviar apenas a lista de nomes únicos dos arquivos (strings)
+        const anexosFilenames = ATTACHMENTS_TO_SAVE.map(att => att.unique_filename);
+
+        const updateData = {
+            id: recordId,
+            data_coleta: dataColeta,
+            nome_motorista: nomeMotorista,
+            nota_fiscal: notaFiscal,
+            anexos: anexosFilenames
+        };
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/registros`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updateData)
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                 throw new Error(result.error || 'Erro desconhecido na atualização.');
+            }
+
+            alert(`Entrega/Coleta confirmada! ${anexosFilenames.length} anexo(s) salvo(s).`);
+
+            form.reset();
+            fillConfirmationFields({ nm: '', desc: '', dataDoc: '', dep: '', numDoc: '', item: '', id: '0' });
+            document.getElementById('anexo_imagem').value = '';
+            ATTACHMENTS_TO_SAVE = [];
+            updateAttachmentPreview();
+
+            await loadData();
+            showForm('relatorio');
+
+        } catch (error) {
+            alert(`Falha ao confirmar entrega: ${error.message}`);
+        }
+    });
+
+    // --- LÓGICA DE ANEXOS (UPLOAD PARA PASTA) ---
+
+    document.getElementById('anexo_imagem').addEventListener('change', async function(e) {
+        const files = e.target.files;
+        if (!files.length) return;
+
+        // Limite alto (50MB) apenas como aviso ao usuário, o limite é do servidor/rede
+        const MAX_FILE_SIZE = 50 * 1024 * 1024;
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+
+            if (file.size > MAX_FILE_SIZE) {
+                alert(`O arquivo "${file.name}" excede o limite de 50MB e será ignorado.`);
+                continue;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    // Salva o nome único (que será usado no DB) e o nome original (para exibição)
+                    ATTACHMENTS_TO_SAVE.push({
+                         name: result.original_name,
+                         unique_filename: result.filename,
+                    });
+                    updateAttachmentPreview();
+                    // alert(`Arquivo "${result.original_name}" enviado com sucesso! Salvo como ${result.filename}`);
+                } else {
+                    alert(`Falha no upload do arquivo "${file.name}": ${result.error}`);
+                }
+            } catch (error) {
+                alert(`Erro de conexão ao enviar o arquivo: ${error.message}`);
+            }
+        }
+
+        e.target.value = null;
+    });
+
+    function updateAttachmentPreview() {
+        const previewDiv = document.getElementById('anexo-preview');
+        const count = ATTACHMENTS_TO_SAVE.length;
+
+        if (count > 0) {
+            previewDiv.classList.remove('hidden');
+            previewDiv.innerHTML = `
+                <p style="color: #17a2b8; font-weight: bold;">Anexos Carregados (${count}):</p>
+                <ul style="list-style-type: none; padding: 0;">
+                    ${ATTACHMENTS_TO_SAVE.map((att, index) => {
+                         const icon = att.name.toLowerCase().endsWith('.pdf') ? '📄' : '🖼️';
+                         return `
+                             <li style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                 <span style="color: #ccc; font-size: 0.9em;">${icon} ${att.name}</span>
+                                 <button type="button"
+                                     onclick="removeAttachment(${index})"
+                                     style="background-color: #dc3545; color: white; border: none; padding: 3px 8px; border-radius: 3px; cursor: pointer;">
+                                     X
+                                 </button>
+                             </li>
+                         `;
+                    }).join('<hr style="border-top: 1px dashed #444; margin: 5px 0;">')}
+                </ul>
+            `;
+        } else {
+            previewDiv.classList.add('hidden');
+            previewDiv.innerHTML = '';
+        }
+    }
+
+    function removeAttachment(index) {
+        if (confirm('Tem certeza que deseja remover este anexo? (Ele será removido do registro na próxima Confirmação de Entrega)')) {
+            // Nota: Não removemos o arquivo físico do disco aqui, apenas do registro.
+            ATTACHMENTS_TO_SAVE.splice(index, 1);
+            updateAttachmentPreview();
+        }
+    }
+
+    // --- FUNÇÃO PARA EXIBIR IMAGENS/PDFS (VIA URL) ---
+    function showImageBase64(filename) {
+        // Usa a rota /uploads/<filename> que o Backend Flask serve
+        const fileUrl = `/uploads/${filename}`;
+        window.open(fileUrl, '_blank');
+    }
+
+
+    // --- RELATÓRIO ---
+
+    function formatNMDisplay(nm_limpo) {
+        let value = nm_limpo.replace(/\D/g, "");
+
+        if (value.length <= 3) return value;
+
+        let formatted = value;
+        if (value.length > 3) {
+             formatted = value.substring(0, value.length - 3) + '.' + value.substring(value.length - 3);
+        }
+        if (formatted.length > 7) {
+             formatted = formatted.substring(0, formatted.length - 7) + '.' + formatted.substring(formatted.length - 7);
+        }
+
+        return formatted;
+    }
+
+    function formatDateDisplay(dateString) {
+        if (!dateString || dateString.toLowerCase() === 'pendente') {
+            return 'Pendente';
+        }
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+        return dateString;
+    }
+
+    function renderRelatorio(data) {
+        const tbody = document.getElementById('relatorio-body');
+        tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: #ffc107;">Carregando dados...</td></tr>';
+
+        const sortedRegistros = data.sort((a, b) => {
+            if (a.data_doc_saida < b.data_doc_saida) return -1;
+            if (a.data_doc_saida > b.data_doc_saida) return 1;
+            return a.num_doc_saida.localeCompare(b.num_doc_saida);
+        });
+
+        if (sortedRegistros.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="13" style="text-align: center; color: #999;">Nenhum registro encontrado. Cadastre um item!</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = '';
+        sortedRegistros.forEach(item => {
+
+            const dataDocFormatada = formatDateDisplay(item.data_doc_saida);
+            const dataColetaFormatada = formatDateDisplay(item.data_coleta);
+
+            const isPendente = dataColetaFormatada === 'Pendente';
+
+            const statusColeta = isPendente ?
+                                 `<span style="font-weight: bold; color: #dc3545;">Pendente ❌</span>` :
+                                 `<span style="font-weight: bold; color: #28a745;">${dataColetaFormatada}</span>`;
+
+            const anexoCount = item.anexos ? item.anexos.length : 0;
+            let anexoDisplay = 'Não';
+
+            if (anexoCount > 0) {
+                const links = item.anexos.map((filename, index) => {
+                    // Item.anexos agora é uma lista de strings (filenames)
+                    const icon = '🔗';
+                    // Passamos o filename (string) para a função showImageBase64
+                    return `<a onclick="showImageBase64('${filename}')" title="Clique para abrir o anexo">${icon} ${index + 1}</a>`;
+                }).join(', ');
+                anexoDisplay = `${anexoCount} Anexo(s): [${links}]`;
+            }
+
+            const nmDisplay = formatNMDisplay(item.nm_saida || '');
+
+            const row = tbody.insertRow();
+            if (isPendente) {
+                row.classList.add('pendente-row');
+            }
+
+            // ALTERAÇÃO 2: A ORDEM DOS TDs FOI AJUSTADA AQUI
+            row.innerHTML = `
+                <td>${nmDisplay}</td>
+                <td>${item.descricao_saida}</td>
+                <td>${item.num_doc_saida}</td>
+                <td>${item.quantidade_saida}</td> <td>${item.item_saida || '-'}</td>
+                <td>${item.destino_saida}</td>
+                <td>${item.responsavel_entrega}</td>
+                <td>${dataDocFormatada}</td>
+                <td>${item.deposito_saida}</td>
+                <td>${statusColeta}</td>
+                <td>${item.nome_motorista || '-'}</td>
+                <td>${item.nota_fiscal || '-'}</td>
+                <td>${anexoDisplay}</td> `;
+        });
+
+        const infoRow = document.createElement('tr');
+        infoRow.style.backgroundColor = '#121212';
+        infoRow.style.color = '#ffc107';
+        infoRow.innerHTML = `
+            <td colspan="13" style="text-align: center; font-style: italic; border: none; padding-top: 15px;">
+                * Linhas em vermelho escuro indicam registros com **Coleta Pendente**.
+            </td>
+        `;
+        tbody.appendChild(infoRow);
+    }
+
+    async function clearData() {
+        if(!confirm('Tem certeza que deseja LIMPAR TODOS OS DADOS (Registros, Referências e Arquivos de Uploads) do Backend? Esta ação é irreversível.')) {
+            return;
+        }
+
+        try {
+             const response = await fetch(`${API_BASE_URL}/reset`, {
+                 method: 'DELETE'
+             });
+
+             if (!response.ok) {
+                 const result = await response.json();
+                 throw new Error(result.message || 'Falha ao limpar o banco de dados e arquivos.');
+             }
+
+             CADERNO_REGISTROS = [];
+             DESCRICAO_REFERENCIA = [];
+
+             alert('Todos os dados e arquivos de uploads foram removidos com sucesso do Backend!');
+             showForm('relatorio');
+        } catch (error) {
+            alert(`Erro ao limpar dados: ${error.message}`);
+        }
+    }
+
+    // --- REFERÊNCIAS ---
+
+    async function processBulkReference() {
+        const dataArea = document.getElementById('bulk_reference_data').value;
+        const lines = dataArea.split('\n').filter(line => line.trim() !== '');
+
+        let updates = [];
+        let errorCount = 0;
+
+        lines.forEach(line => {
+            let nm = '';
+            let descricao = '';
+            const trimmedLine = line.trim();
+
+            if (trimmedLine.includes(';')) {
+                const parts = trimmedLine.split(';', 2);
+                nm = parts[0].trim().replace(/\D/g, "");
+                descricao = parts[1].trim();
+            } else {
+                const match = trimmedLine.match(/^\S+/);
+                if (match) {
+                    nm = match[0].trim().replace(/\D/g, "");
+                    descricao = trimmedLine.substring(match[0].length).trim();
+                }
+            }
+
+            if (!nm || descricao === '' || nm.length > MAX_NM_DIGITS) {
+                 errorCount++;
+                 return;
+            }
+
+            updates.push({ nm: nm, descricao: descricao });
+        });
+
+        if (updates.length === 0) {
+             alert(`Nenhuma referência válida para processar. ${errorCount} linha(s) ignorada(s).`);
+             return;
+        }
+
+        try {
+            const oldNMs = new Set(DESCRICAO_REFERENCIA.map(ref => ref.nm));
+
+            const response = await fetch(`${API_BASE_URL}/referencias`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ referencias: updates })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                 throw new Error(result.error || 'Erro ao processar referências.');
+            }
+
+            await loadData();
+
+            let addedCount = 0;
+            let updatedCount = 0;
+            updates.forEach(update => {
+                if (oldNMs.has(update.nm)) {
+                    updatedCount++;
+                } else {
+                    addedCount++;
+                }
+            });
+
+            document.getElementById('bulk_reference_data').value = '';
+
+            let message = `Processamento concluído:\n`;
+            message += `✅ ${addedCount} novos NM's adicionados.\n`;
+            message += `🔄 ${updatedCount - addedCount} NM's existentes atualizados ou inalterados.\n`;
+
+            if (errorCount > 0) {
+                message += `⚠️ ${errorCount} linha(s) ignorada(s) devido a erro no formato ou NM muito longo.`;
+            }
+
+            alert(message);
+
+            showForm('cadastro');
+
+        } catch (error) {
+            alert(`Falha ao processar referências: ${error.message}`);
+        }
+    }
+
+    function autofillDescription() {
+        const nmInput = document.getElementById('nm_saida');
+        const descTextarea = document.getElementById('descricao_saida');
+
+        const nmClean = nmInput.value.trim().replace(/\D/g, "");
+
+        if (nmClean.length === 0) {
+             descTextarea.value = '';
+             return;
+        }
+
+        const item = DESCRICAO_REFERENCIA.find(ref => ref.nm === nmClean);
+
+        if (item) {
+            descTextarea.value = item.descricao;
+        } else {
+             descTextarea.value = '';
+        }
+    }
+
+    async function deleteReference(nmToDelete) {
+        if(!confirm(`Tem certeza que deseja remover a referência NM: ${formatNMDisplay(nmToDelete)}?`)) {
+            return;
+        }
+
+        try {
+             const response = await fetch(`${API_BASE_URL}/referencias/${nmToDelete}`, {
+                 method: 'DELETE'
+             });
+
+             if (!response.ok) {
+                 const result = await response.json();
+                 throw new Error(result.message || 'Falha ao remover referência.');
+             }
+
+             alert(`Referência ${formatNMDisplay(nmToDelete)} removida com sucesso!`);
+
+             await loadData();
+             renderReferenceTable();
+
+        } catch (error) {
+            alert(`Erro ao remover referência: ${error.message}`);
+        }
+    }
+
+    function renderReferenceTable() {
+        const tbody = document.getElementById('referencia-body');
+        tbody.innerHTML = '';
+
+        if (DESCRICAO_REFERENCIA.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align: center; color: #999;">Nenhuma referência cadastrada.</td></tr>';
+            return;
+        }
+
+        DESCRICAO_REFERENCIA.sort((a, b) => a.nm.localeCompare(b.nm)).forEach(item => {
+            const row = tbody.insertRow();
+
+            const nmDisplay = formatNMDisplay(item.nm);
+
+            row.innerHTML = `
+                <td>${nmDisplay}</td>
+                <td>${item.descricao}</td>
+                <td><button type="button" style="padding: 5px 10px; background-color: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;" onclick="deleteReference('${item.nm}')">Remover</button></td>
+            `;
+        });
+    }
+
+    // --- LÓGICA DE REDIMENSIONAMENTO MANUAL DE COLUNAS ---
+
+    function makeResizableTable(tableId) {
+        const table = document.getElementById(tableId).querySelector('.relatorio-table');
+        if (!table) return;
+
+        let ths = table.querySelectorAll('th');
+        let currentTh = null;
+        let startX = 0;
+        let startWidth = 0;
+
+        ths.forEach(th => {
+            const existingResizer = th.querySelector('.resizer');
+            if (existingResizer) {
+                 existingResizer.remove();
+            }
+
+            const resizer = document.createElement('div');
+            resizer.className = 'resizer';
+            th.appendChild(resizer);
+
+            resizer.addEventListener('mousedown', function(e) {
+                e.preventDefault();
+
+                currentTh = th;
+                startX = e.clientX;
+                startWidth = currentTh.offsetWidth;
+
+                document.addEventListener('mousemove', handleMouseMove);
+                document.addEventListener('mouseup', handleMouseUp);
+            });
+        });
+
+        function handleMouseMove(e) {
+            if (!currentTh) return;
+
+            const diffX = e.clientX - startX;
+            const newWidth = Math.max(startWidth + diffX, 30);
+
+            currentTh.style.width = newWidth + 'px';
+            currentTh.style.minWidth = newWidth + 'px';
+        }
+
+        function handleMouseUp() {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            currentTh = null;
+        }
+    }
+
+    // --- EVENTO F5 (LIGA/DESLIGA Referências) E ESC (LOGOUT) ---
+
+    document.addEventListener('keydown', function(event) {
+        // ESC para Logout
+        if (event.keyCode === 27) {
+            event.preventDefault();
+            logout();
+            return;
+        }
+
+        // F5 (keyCode 116) para Referências (LIGA/DESLIGA)
+        if (event.keyCode === 116) {
+            event.preventDefault();
+
+            const mainApp = document.getElementById('main-application');
+
+            if(mainApp.classList.contains('hidden')) {
+                return;
+            }
+
+            const referenciaForm = document.getElementById('referencia-form');
+            const referenciaButton = document.getElementById('btn-referencia');
+
+            if (!referenciaForm.classList.contains('hidden')) {
+                // Ação: OCULTA FORM E BOTÃO.
+                referenciaForm.classList.add('hidden');
+                referenciaButton.classList.add('hidden');
+                saveReferenceState(false);
+
+            } else {
+                // Ação: EXIBE a Referência, escondendo as outras abas
+
+                const forms = document.querySelectorAll('.container form, .container section');
+                forms.forEach(form => form.classList.add('hidden'));
+
+                referenciaForm.classList.remove('hidden');
+                referenciaButton.classList.remove('hidden');
+                saveReferenceState(true);
+
+                loadData().then(renderReferenceTable);
+            }
+        }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const usernameInput = document.getElementById('username');
+        if (usernameInput) {
+             usernameInput.focus();
+        }
+
+        // Oculta o botão de referência ao carregar
+        const referenciaButton = document.getElementById('btn-referencia');
+        if (referenciaButton) {
+            referenciaButton.classList.add('hidden');
+        }
+    });
+</script>
+
+</body>
+</html>
