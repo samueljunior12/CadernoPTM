@@ -568,7 +568,7 @@
     <section id="relatorio-form" class="hidden">
         <h3>📑 Caderno de Entregas</h3>
 
-        <!-- ÁREA DE BUSCA ADICIONADA -->
+        <!-- ÁREA DE BUSCA -->
         <div class="search-box-container">
             <input
                 type="text"
@@ -578,7 +578,6 @@
             >
             <button type="button" class="btn-clear-search" onclick="limparBusca()">Limpar</button>
         </div>
-        <!-- FIM DA ÁREA DE BUSCA -->
 
         <div>
             <table class="relatorio-table">
@@ -642,13 +641,16 @@
 </div>
 <script>
    // --- VARIÁVEIS DE CONFIGURAÇÃO ---
-    
+
     // Altera a URL automaticamente. Se estiver local, usa localhost. Se estiver online, usa a URL do site.
-    const API_BASE_URL = window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost') 
-        ? 'http://127.0.0.1:5000/api' 
+    const API_BASE_URL = window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost')
+        ? 'http://127.0.0.1:5000/api'
         : window.location.origin + '/api';
 
     const STORAGE_KEY_REF_VISIBLE = 'referencia_is_visible';
+
+    // CORREÇÃO: Variável que faltava para formatar NM e processar colagem
+    const MAX_NM_DIGITS = 8;
 
     // VARIÁVEIS DE LOGIN
     const VALID_USERNAME = 'soparm';
@@ -657,7 +659,6 @@
 
     let DESCRICAO_REFERENCIA = [];
     let CADERNO_REGISTROS = [];
-    // ATTACHMENTS_TO_SAVE agora armazena objetos { name: nome_original, unique_filename: nome_unico_servidor }
     let ATTACHMENTS_TO_SAVE = [];
 
     // --- LISTA DE DESTINOS ---
@@ -846,6 +847,8 @@
     // --- FUNÇÃO DE MASCARAMENTO NM (8 DÍGITOS) ---
     function formatNM(input) {
         let value = input.value.replace(/\D/g, "");
+
+        // Usa a variável MAX_NM_DIGITS agora definida
         if (value.length > MAX_NM_DIGITS) {
             value = value.substring(0, MAX_NM_DIGITS);
         }
@@ -1290,6 +1293,7 @@
                 }
             }
 
+            // Usa variável MAX_NM_DIGITS
             if (!nm || descricao === '' || nm.length > MAX_NM_DIGITS) {
                  errorCount++;
                  return;
