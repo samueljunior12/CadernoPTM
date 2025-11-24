@@ -3,75 +3,65 @@ import os
 import time
 from flask import Flask, request, jsonify, send_from_directory, render_template
 from werkzeug.utils import secure_filename
-from collections import defaultdict
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)  # Habilita CORS para todas as rotas (Vital para o Render)
+
+# --- CONFIGURAÇÃO DE ARQUIVOS ---
 DB_FILE = 'caderno_ptm_db.json'
 REFERENCIAS_FILE = 'referencias.json'
 
-# --- CONFIGURAÇÃO DE UPLOAD ---
+# Configuração da pasta de Uploads
 UPLOAD_FOLDER = 'uploads'
-# Cria a pasta se ela não existir
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # Opcional: Limite de 50MB
 
-
-# NOTA: Removida a linha app.config['MAX_CONTENT_LENGTH'] para não impor limite.
-# ------------------------------
-
-# --- FUNÇÕES DE CARREGAMENTO E SALVAMENTO GERAL ---
+# --- FUNÇÕES AUXILIARES (CARREGAR/SALVAR) ---
 
 def load_data():
-    """Carrega os registros do caderno."""
+    """Carrega registros do arquivo JSON. Cria se não existir."""
+    if not os.path.exists(DB_FILE):
+        return []
     try:
-        if os.path.exists(DB_FILE):
-            with open(DB_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        with open(DB_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
         return []
-    except json.JSONDecodeError:
-        print("Aviso: Arquivo DB vazio ou inválido. Iniciando com lista vazia.")
-        return []
-
 
 def save_data(data):
-    """Salva os registros no caderno."""
+    """Salva registros no arquivo JSON."""
     with open(DB_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-
 def load_referencias():
-    """Carrega as referências de NM/Descrição."""
+    """Carrega referências do arquivo JSON. Cria se não existir."""
+    if not os.path.exists(REFERENCIAS_FILE):
+        return []
     try:
-        if os.path.exists(REFERENCIAS_FILE):
-            with open(REFERENCIAS_FILE, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        with open(REFERENCIAS_FILE, 'r', encoding='utf-8') as f:
+            return json.load(f)
+    except (json.JSONDecodeError, FileNotFoundError):
         return []
-    except json.JSONDecodeError:
-        print("Aviso: Arquivo de Referências vazio ou inválido. Iniciando com lista vazia.")
-        return []
-
 
 def save_referencias(data):
-    """Salva as referências de NM/Descrição."""
+    """Salva referências no arquivo JSON."""
     with open(REFERENCIAS_FILE, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=4, ensure_ascii=False)
 
-
-# --- ROTAS DA APLICAÇÃO ---
+# --- ROTAS ---
 
 @app.route('/')
 def index():
-    """Rota principal que serve o frontend."""
+    """Serve o arquivo HTML principal."""
     return render_template('index.html')
 
-
-# -------------------------------------------------------------
-# ROTA DE UPLOAD DE ARQUIVOS
-# -------------------------------------------------------------
+# --- UPLOAD DE ARQUIVOS ---
 @app.route('/api/upload', methods=['POST'])
 def upload_file():
-    """Recebe um arquivo, salva no disco e retorna o nome único."""
     if 'file' not in request.files:
         return jsonify({'error': 'Nenhum arquivo enviado.'}), 400
 
@@ -80,34 +70,27 @@ def upload_file():
         return jsonify({'error': 'Nome de arquivo inválido.'}), 400
 
     if file:
-        filename = secure_filename(file.filename)
-        # Usa timestamp para garantir um nome de arquivo único
-        unique_filename = f"{int(time.time())}_{filename}"
-
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
-
         try:
+            filename = secure_filename(file.filename)
+            # Adiciona timestamp para garantir unicidade
+            unique_filename = f"{int(time.time())}_{filename}"
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+            
             file.save(file_path)
-            # Retorna o nome do arquivo salvo (string) e o nome original
+            
+            # Retorna o nome salvo e o nome original
             return jsonify({'filename': unique_filename, 'original_name': filename}), 200
         except Exception as e:
-            return jsonify({'error': f'Falha ao salvar o arquivo no disco: {str(e)}'}), 500
+            return jsonify({'error': f'Erro no servidor ao salvar arquivo: {str(e)}'}), 500
 
-    return jsonify({'error': 'Falha no processamento do arquivo.'}), 500
+    return jsonify({'error': 'Erro desconhecido.'}), 500
 
-
-# -------------------------------------------------------------
-# ROTA PARA SERVIR ARQUIVOS SALVOS
-# -------------------------------------------------------------
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
-    """Serve os arquivos estáticos da pasta de uploads."""
+    """Rota para visualizar a imagem/pdf clicando no link."""
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
-
-# -------------------------------------------------------------
-# ROTA PRINCIPAL DE REGISTROS (CRUD)
-# -------------------------------------------------------------
+# --- CRUD DE REGISTROS ---
 @app.route('/api/registros', methods=['GET', 'POST', 'DELETE'])
 def handle_registros():
     registros = load_data()
@@ -118,36 +101,46 @@ def handle_registros():
     if request.method == 'POST':
         data = request.get_json()
 
-        if 'id' in data and data['id'] != '0':
-            # --- UPDATE (Confirmação de Entrega) ---
+        # Cenário 1: ATUALIZAÇÃO (Confirmação de Entrega)
+        # Verifica se tem ID e se não é '0' (que seria novo)
+        if 'id' in data and str(data['id']) != '0':
+            registro_encontrado = False
             for i, reg in enumerate(registros):
-                if str(reg['id']) == data['id']:
-                    # Atualiza campos de confirmação
+                if str(reg['id']) == str(data['id']):
+                    # Atualiza apenas os campos de entrega
                     registros[i]['data_coleta'] = data.get('data_coleta', 'Pendente')
                     registros[i]['nome_motorista'] = data.get('nome_motorista', '')
                     registros[i]['nota_fiscal'] = data.get('nota_fiscal', '')
-
-                    # Salva apenas a lista de NOMES DOS ARQUIVOS (strings)
+                    
+                    # Se houver novos anexos, atualiza a lista
                     if 'anexos' in data:
                         registros[i]['anexos'] = data['anexos']
+                    
+                    registro_encontrado = True
+                    break
+            
+            if registro_encontrado:
+                save_data(registros)
+                return jsonify({'message': 'Registro atualizado com sucesso.'}), 200
+            else:
+                return jsonify({'error': 'Registro não encontrado para atualização.'}), 404
 
-                    save_data(registros)
-                    return jsonify({'message': f"Registro {data['id']} atualizado com sucesso."}), 200
-
-            return jsonify({'error': 'Registro não encontrado para atualização.'}), 404
+        # Cenário 2: NOVO CADASTRO (Saída)
         else:
-            # --- CREATE (Cadastro de Saída) ---
+            # Validação de Duplicidade (Mesmo Doc + Mesmo Item)
+            for r in registros:
+                if str(r['num_doc_saida']) == str(data['num_doc_saida']) and \
+                   str(r['item_saida']) == str(data['item_saida']):
+                    return jsonify({'error': f"Já existe um registro com Doc {data['num_doc_saida']} e Item {data['item_saida']}."}), 409
 
-            # 1. Validação de duplicidade (NM + N° Doc. + Item)
-            key = (data['num_doc_saida'], data['item_saida'])
-            if any((r['num_doc_saida'], r['item_saida']) == key for r in registros):
-                return jsonify({
-                                   'error': f"O par N° Doc ({data['num_doc_saida']}) e Item ({data['item_saida']}) já existe no cadastro."}), 409
+            # Gera novo ID
+            novo_id = 1
+            if registros:
+                # Pega o maior ID existente e soma 1
+                novo_id = max(int(r['id']) for r in registros) + 1
 
-            # 2. Cria novo registro
-            novo_id = max([r['id'] for r in registros] or [0]) + 1
             novo_registro = {
-                'id': novo_id,
+                'id': str(novo_id),
                 'nm_saida': data['nm_saida'],
                 'descricao_saida': data['descricao_saida'],
                 'quantidade_saida': data['quantidade_saida'],
@@ -157,27 +150,20 @@ def handle_registros():
                 'deposito_saida': data['deposito_saida'],
                 'num_doc_saida': data['num_doc_saida'],
                 'item_saida': data['item_saida'],
-
-                # Campos de Confirmação (Início)
+                
+                # Campos vazios iniciais
                 'data_coleta': 'Pendente',
                 'nome_motorista': '',
                 'nota_fiscal': '',
-                'anexos': [],  # Lista de nomes de arquivos
+                'anexos': []
             }
             registros.append(novo_registro)
             save_data(registros)
-            return jsonify({'message': 'Registro cadastrado com sucesso!', 'id': novo_id}), 201
-
-    if request.method == 'DELETE':
-        # Não implementado para esta versão
-        return jsonify({'message': 'Ainda não implementado'}), 501
+            return jsonify({'message': 'Cadastro realizado com sucesso!', 'id': novo_id}), 201
 
     return jsonify({'error': 'Método não permitido'}), 405
 
-
-# -------------------------------------------------------------
-# ROTA DE REFERÊNCIAS (NM/DESC)
-# -------------------------------------------------------------
+# --- CRUD DE REFERÊNCIAS (NM/DESCRIÇÃO) ---
 @app.route('/api/referencias', methods=['GET', 'POST'])
 def handle_referencias():
     referencias = load_referencias()
@@ -189,59 +175,60 @@ def handle_referencias():
         data = request.get_json()
 
         if 'referencias' in data:
-            # Lógica de Atualização/Criação em Massa
-            nm_to_update = {ref['nm']: ref for ref in referencias}
-
+            # Cria um dicionário para facilitar a atualização (NM -> Objeto)
+            nm_map = {ref['nm']: ref for ref in referencias}
+            
+            # Atualiza existentes ou adiciona novos
             for new_ref in data['referencias']:
-                nm_to_update[new_ref['nm']] = new_ref
-
-            referencias = list(nm_to_update.values())
-            save_referencias(referencias)
-            return jsonify({'message': 'Referências atualizadas com sucesso!'}), 200
+                nm_map[new_ref['nm']] = new_ref
+            
+            # Converte de volta para lista
+            nova_lista_referencias = list(nm_map.values())
+            
+            save_referencias(nova_lista_referencias)
+            return jsonify({'message': 'Referências processadas com sucesso!'}), 200
+        
+        return jsonify({'error': 'Formato inválido. Esperado { "referencias": [] }'}), 400
 
     return jsonify({'error': 'Método não permitido'}), 405
-
 
 @app.route('/api/referencias/<nm>', methods=['DELETE'])
 def delete_referencia(nm):
     referencias = load_referencias()
+    
+    # Filtra removendo o NM especificado
+    nova_lista = [ref for ref in referencias if ref['nm'] != nm]
 
-    referencias_antes = len(referencias)
-    referencias = [ref for ref in referencias if ref['nm'] != nm]
+    if len(nova_lista) < len(referencias):
+        save_referencias(nova_lista)
+        return jsonify({'message': f'Referência {nm} removida.'}), 200
+    
+    return jsonify({'error': 'Referência não encontrada.'}), 404
 
-    if len(referencias) < referencias_antes:
-        save_referencias(referencias)
-        return jsonify({'message': f"Referência {nm} removida."}), 200
-
-    return jsonify({'error': f"Referência {nm} não encontrada."}), 404
-
-
-# -------------------------------------------------------------
-# ROTA DE RESET GERAL
-# -------------------------------------------------------------
+# --- RESET GERAL ---
 @app.route('/api/reset', methods=['DELETE'])
 def reset_data():
-    """Limpa todos os registros e referências."""
+    """Apaga tudo: DB, Referências e Arquivos de Upload."""
     try:
+        # Limpa JSONs
         save_data([])
         save_referencias([])
-
-        # Opcional: Remover arquivos na pasta de uploads (recomendado)
-        for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            try:
-                if os.path.isfile(file_path):
-                    os.unlink(file_path)
-            except Exception as e:
-                print(f"Erro ao deletar arquivo {file_path}: {e}")
-
-        return jsonify({'message': 'Todos os registros, referências e arquivos de uploads foram limpos.'}), 200
+        
+        # Limpa pasta de uploads
+        if os.path.exists(UPLOAD_FOLDER):
+            for filename in os.listdir(UPLOAD_FOLDER):
+                file_path = os.path.join(UPLOAD_FOLDER, filename)
+                try:
+                    if os.path.isfile(file_path):
+                        os.unlink(file_path)
+                except Exception as e:
+                    print(f"Erro ao deletar {file_path}: {e}")
+                    
+        return jsonify({'message': 'Sistema resetado com sucesso.'}), 200
     except Exception as e:
-        return jsonify({'error': f'Falha ao resetar os dados: {str(e)}'}), 500
-
-
-# -------------------------------------------------------------
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == "__main__":
+    # Configuração para rodar tanto local quanto no Render
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)
