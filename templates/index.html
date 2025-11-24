@@ -306,6 +306,46 @@
             background-color: #402020 !important;
         }
 
+        /* ESTILOS DA NOVA BARRA DE PESQUISA */
+        .search-box-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            background-color: #2a2a2a;
+            padding: 15px;
+            border-radius: 4px;
+            border: 1px solid #444;
+        }
+
+        .search-box-container input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #555;
+            border-radius: 4px;
+            background-color: #333;
+            color: #f0f0f0;
+            font-size: 16px;
+        }
+
+        .search-box-container input:focus {
+            border-color: #ffc107;
+            outline: none;
+        }
+
+        .btn-clear-search {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .btn-clear-search:hover {
+            background-color: #5a6268;
+        }
+
     </style>
 </head>
 <body>
@@ -518,7 +558,6 @@
                     name="anexo_imagem"
                     accept="image/*, application/pdf"
                     multiple>
-                <p class="warning-text">⚠️ O arquivo será enviado para a pasta 'uploads/' no servidor. Não há limite de tamanho imposto pelo sistema.</p>
                 <div id="anexo-preview" class="anexo-preview hidden"></div>
             </div>
         </div>
@@ -529,6 +568,18 @@
     <section id="relatorio-form" class="hidden">
         <h3>📑 Caderno de Entregas</h3>
 
+        <!-- ÁREA DE BUSCA ADICIONADA -->
+        <div class="search-box-container">
+            <input
+                type="text"
+                id="search_input"
+                placeholder="🔍 Pesquisar por NM, N° Documento ou NF..."
+                onkeyup="filtrarRelatorio()"
+            >
+            <button type="button" class="btn-clear-search" onclick="limparBusca()">Limpar</button>
+        </div>
+        <!-- FIM DA ÁREA DE BUSCA -->
+
         <div>
             <table class="relatorio-table">
                 <thead>
@@ -536,7 +587,8 @@
                         <th>NM</th>
                         <th>Descrição</th>
                         <th>Nº Doc.</th>
-                        <th>Qtd</th> <th>Item</th>
+                        <th>Qtd</th>
+                        <th>Item</th>
                         <th>Destino</th>
                         <th>Resp. Entrega</th>
                         <th>Data Doc. (Saída)</th>
@@ -544,7 +596,8 @@
                         <th>Data Coleta</th>
                         <th>Nome/Empresa do Motorista</th>
                         <th>NF</th>
-                        <th>Anexo</th> </tr>
+                        <th>Anexo</th>
+                    </tr>
                 </thead>
                 <tbody id="relatorio-body">
                     </tbody>
@@ -588,10 +641,14 @@
     </section>
 </div>
 <script>
-    // --- VARIÁVEIS DE CONFIGURAÇÃO ---
-    const API_BASE_URL = 'http://127.0.0.1:5000/api';
+   // --- VARIÁVEIS DE CONFIGURAÇÃO ---
+    
+    // Altera a URL automaticamente. Se estiver local, usa localhost. Se estiver online, usa a URL do site.
+    const API_BASE_URL = window.location.origin.includes('127.0.0.1') || window.location.origin.includes('localhost') 
+        ? 'http://127.0.0.1:5000/api' 
+        : window.location.origin + '/api';
+
     const STORAGE_KEY_REF_VISIBLE = 'referencia_is_visible';
-    const MAX_NM_DIGITS = 8;
 
     // VARIÁVEIS DE LOGIN
     const VALID_USERNAME = 'soparm';
@@ -776,6 +833,9 @@
                 saveReferenceState(false);
 
                 if (formType === 'relatorio') {
+                    // Limpa a busca ao entrar na aba
+                    if(document.getElementById('search_input')) document.getElementById('search_input').value = '';
+
                     await loadData();
                     renderRelatorio(CADERNO_REGISTROS);
                 }
@@ -1150,12 +1210,13 @@
                 row.classList.add('pendente-row');
             }
 
-            // ALTERAÇÃO 2: A ORDEM DOS TDs FOI AJUSTADA AQUI
+            // A ordem das colunas no relatório
             row.innerHTML = `
                 <td>${nmDisplay}</td>
                 <td>${item.descricao_saida}</td>
                 <td>${item.num_doc_saida}</td>
-                <td>${item.quantidade_saida}</td> <td>${item.item_saida || '-'}</td>
+                <td>${item.quantidade_saida}</td>
+                <td>${item.item_saida || '-'}</td>
                 <td>${item.destino_saida}</td>
                 <td>${item.responsavel_entrega}</td>
                 <td>${dataDocFormatada}</td>
@@ -1163,7 +1224,8 @@
                 <td>${statusColeta}</td>
                 <td>${item.nome_motorista || '-'}</td>
                 <td>${item.nota_fiscal || '-'}</td>
-                <td>${anexoDisplay}</td> `;
+                <td>${anexoDisplay}</td>
+            `;
         });
 
         const infoRow = document.createElement('tr');
@@ -1402,6 +1464,37 @@
             document.removeEventListener('mouseup', handleMouseUp);
             currentTh = null;
         }
+    }
+
+    // --- NOVAS FUNÇÕES PARA O FILTRO DE PESQUISA ---
+
+    function filtrarRelatorio() {
+        const termo = document.getElementById('search_input').value.toLowerCase().trim();
+
+        if (!termo) {
+            renderRelatorio(CADERNO_REGISTROS);
+            return;
+        }
+
+        const registrosFiltrados = CADERNO_REGISTROS.filter(reg => {
+            const nmRaw = (reg.nm_saida || '').toString();
+            const nmFormatado = formatNMDisplay(nmRaw);
+            const doc = (reg.num_doc_saida || '').toString().toLowerCase();
+            const nf = (reg.nota_fiscal || '').toString().toLowerCase();
+
+            return nmRaw.includes(termo) ||
+                   nmFormatado.includes(termo) ||
+                   doc.includes(termo) ||
+                   nf.includes(termo);
+        });
+
+        renderRelatorio(registrosFiltrados);
+    }
+
+    function limparBusca() {
+        document.getElementById('search_input').value = '';
+        renderRelatorio(CADERNO_REGISTROS);
+        document.getElementById('search_input').focus();
     }
 
     // --- EVENTO F5 (LIGA/DESLIGA Referências) E ESC (LOGOUT) ---
